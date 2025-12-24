@@ -1,15 +1,23 @@
-import { Button } from "@/components/ui/button";
-import config from "@/lib/config";
+'use client';
+
+import Navigation from "@/components/home/Navigation";
+import Hero from "@/components/home/Hero";
+import Preview from "@/components/home/Preview";
+import Features from "@/components/home/Features";
+import Stats from "@/components/home/Stats";
+import CTA from "@/components/home/CTA";
+import Footer from "@/components/home/Footer";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24 gap-4">
-      <h1 className="text-4xl font-bold">{config.appName}</h1>
-      <p className="text-muted-foreground">Boilerplate initialized.</p>
-      <div className="flex gap-4">
-        <Button>Get Started</Button>
-        <Button variant="outline">Learn More</Button>
-      </div>
+    <main className="min-h-screen bg-black text-white overflow-hidden">
+      <Navigation />
+      <Hero />
+      <Preview />
+      <Features />
+      <Stats />
+      <CTA />
+      <Footer />
     </main>
   );
 }

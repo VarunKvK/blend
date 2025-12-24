@@ -1,4 +1,4 @@
-# My Micro-SaaS Boilerplate
+# Blend
 
 A modern, production-ready SaaS starter kit built with Next.js, Supabase, and DoDo Payments.
 
@@ -25,7 +25,7 @@ Ensure you have the following installed:
     ```bash
     git clone <repository-url>
     cd saas-boilerplate
-    ```
+    ``` 
 
 2.  **Install dependencies:**
 
@@ -62,7 +62,7 @@ Open `lib/config.js` to configure your application details and select your payme
 
 ```javascript
 const config = {
-  appName: "My Micro SaaS",
+  appName: "Blend",
   // ...
   paymentProvider: "dodo", // Ensure this is set to 'dodo' if using DoDo Payments
   // ...
