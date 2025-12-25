@@ -1,49 +1,73 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
 import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
     return (
-        <section className="relative border-b border-white/10">
-            <div className="max-w-7xl mx-auto px-6 py-32 md:py-40">
-                <div className="max-w-4xl">
-                    <Badge className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 mb-8">
-                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
-                        <span className="text-xs text-white/80 uppercase tracking-wider">Now in Beta</span>
-                    </Badge>
+        <section className="relative min-h-[90vh] flex flex-col items-center justify-center border-b border-white/10 bg-black overflow-hidden pt-20">
+            {/* Grid Background Layer */}
+            <div className="absolute inset-0 pointer-events-none">
+                {/* Center Vertical Line - Solid */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10 -translate-x-1/2" />
 
-                    <h2 className="text-6xl md:text-8xl font-serif tracking-light mb-8 leading-none">
-                        Create Beautiful<br />Gradients Instantly
+                {/* Content Width Vertical Lines - Dashed */}
+                <div className="absolute left-1/2 top-0 bottom-0 w-full max-w-[1000px] -translate-x-1/2 border-x border-dashed border-white/10" />
+
+                {/* Outer Vertical Lines - Dashed (Full width grid) */}
+                <div className="absolute left-0 top-0 bottom-0 w-px border-r border-dashed border-white/5" />
+                <div className="absolute right-0 top-0 bottom-0 w-px border-l border-dashed border-white/5" />
+
+                {/* Top Horizontal Line - Dashed */}
+                <div className="absolute top-[15%] left-0 right-0 border-b border-dashed border-white/10" />
+                {/* Bottom Horizontal Line - Dashed */}
+                <div className="absolute bottom-[15%] left-0 right-0 border-t border-dashed border-white/10" />
+            </div>
+
+            <div className="relative z-10 w-full max-w-[1000px] mx-auto grid place-items-center">
+
+                {/* Badge Section */}
+                <div className="w-full border-b border-dashed border-white/10 py-8 flex justify-center backdrop-blur-[2px]">
+                    <div className="bg-black/80 px-4 py-1 rounded-full border border-white/20">
+                        <Badge className="bg-transparent hover:bg-transparent border-0 p-0 text-white flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                            <span className="text-[10px] uppercase tracking-widest text-white/70">Now in Beta</span>
+                        </Badge>
+                    </div>
+                </div>
+
+                {/* Main Content Section */}
+                <div className="w-full py-20 text-center px-6 backdrop-blur-[2px]">
+                    <h2 className="text-6xl md:text-8xl font-serif tracking-tight mb-8 text-white leading-[0.9]">
+                        Create Beautiful<br />
+                        <span className="italic font-light">Gradients Instantly</span>
                     </h2>
 
-                    <p className="text-xl md:text-lg text-white/60 max-w-2xl mb-12 leading-relaxed">
+                    <p className="text-lg md:text-xl text-white/50 max-w-lg mx-auto leading-relaxed mb-0 font-light">
                         Transform images into stunning mesh gradients. Extract colors, customize layouts, and export in seconds.
                     </p>
+                </div>
 
-                    <div className="flex flex-col sm:flex-row items-start gap-4">
-                        <Link href="/blend">
-                            <Button size="lg" className="bg-white text-black hover:bg-white/90 font-medium px-8 group">
-                                Start Creating Free
-                                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                        </Link>
-                        <Link href="#features">
-                            <Button size="lg" variant="ghost" className="border-white/20 hover:bg-white hover:text-black transition-all">
-                                See How It Works
-                            </Button>
-                        </Link>
-                    </div>
+                {/* Buttons Section */}
+                <div className="w-full border-t border-dashed border-white/10 py-10 flex flex-col sm:flex-row items-center justify-center gap-6 backdrop-blur-[2px]">
+                    <Link href="/blend">
+                        <InteractiveHoverButton
+                            text="Start Creating"
+                            className="bg-white text-black hover:bg-zinc-200 border-white"
+                        />
+                    </Link>
+                    <Link href="#features">
+                        <span className="text-sm font-medium text-white/60 hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white/60 pb-0.5">
+                            See How It Works
+                        </span>
+                    </Link>
                 </div>
             </div>
 
-            {/* Grid Background */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.02]">
-                <div className="absolute inset-0" style={{
-                    backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-                    backgroundSize: '40px 40px'
-                }} />
-            </div>
+            {/* Decorative corners for the grid */}
+            <div className="absolute top-[15%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/20 rotate-45" />
+            <div className="absolute bottom-[15%] left-[50%] -translate-x-1/2 translate-y-1/2 w-2 h-2 bg-white/20 rotate-45" />
         </section>
     );
 }

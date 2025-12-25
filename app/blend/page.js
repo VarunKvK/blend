@@ -188,7 +188,7 @@ export default function BlendPage() {
                 <div className="p-6 border-b border-white/10">
                     <Link href="/">
                         <h1 className="text-lg font-bold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity">
-                            BLEND
+                            BLENDIT
                         </h1>
                     </Link>
                 </div>
