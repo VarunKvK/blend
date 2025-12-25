@@ -16,11 +16,11 @@ export default function Navigation() {
                     <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition-colors">
                         Pricing
                     </Link>
-                    <Link href="/login">
-                        <Button variant="outline" size="sm" className="border-white/20 hover:bg-white hover:text-black transition-all">
+                    {/* <Link href="/login">
+                        <Button variant="ghost" size="sm" className="border-white/20 hover:bg-white hover:text-black transition-all">
                             Sign In
                         </Button>
-                    </Link>
+                    </Link> */}
                     <Link href="/blend">
                         <Button size="sm" className="bg-white text-black hover:bg-white/90">
                             Get Started

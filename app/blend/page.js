@@ -8,6 +8,8 @@ import Dropzone from '@/components/blend/Dropzone';
 import PaletteDisplay from '@/components/blend/PaletteDisplay';
 import Controls from '@/components/blend/Controls';
 import PreviewCanvas from '@/components/blend/PreviewCanvas';
+import ShotframePromo from '@/components/blend/ShotframePromo';
+import Link from 'next/link';
 
 export default function BlendPage() {
     const [image, setImage] = useState(null);
@@ -184,11 +186,13 @@ export default function BlendPage() {
         <div className="min-h-screen flex flex-col md:flex-row bg-black text-zinc-100 overflow-hidden font-sans">
             <div className="w-full md:w-[380px] flex-shrink-0 bg-black border-r border-white/10 flex flex-col h-screen z-20 shadow-2xl">
                 <div className="p-6 border-b border-white/10">
-                    <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                        BLEND <span className="text-[10px] font-normal text-zinc-500 border border-zinc-800 px-1 rounded">BETA</span>
-                    </h1>
+                    <Link href="/">
+                        <h1 className="text-lg font-bold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity">
+                            BLEND
+                        </h1>
+                    </Link>
                 </div>
-                <div className="p-6 space-y-8 flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-800">
+                <div className="p-6 space-y-8 flex-1 overflow-y-auto scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                     <Dropzone onImageLoaded={setImage} currentImage={image} />
                     {isExtracting ? (
                         <div className="text-center py-8 text-zinc-400 text-sm animate-pulse">Analyzing Colors...</div>
@@ -198,6 +202,10 @@ export default function BlendPage() {
                             <Controls config={gradientConfig} onChange={setGradientConfig} onShuffle={handleShuffle} />
                         </>
                     )}
+
+                    {/* Shotframe Promo */}
+                    <ShotframePromo />
+
                     <div>
                         <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-3">Canvas</h3>
                         <div className="relative">

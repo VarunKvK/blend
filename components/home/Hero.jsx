@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
 
 export default function Hero() {
@@ -7,16 +8,16 @@ export default function Hero() {
         <section className="relative border-b border-white/10">
             <div className="max-w-7xl mx-auto px-6 py-32 md:py-40">
                 <div className="max-w-4xl">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 mb-8">
+                    <Badge className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 mb-8">
                         <div className="w-1.5 h-1.5 rounded-full bg-white" />
                         <span className="text-xs text-white/80 uppercase tracking-wider">Now in Beta</span>
-                    </div>
+                    </Badge>
 
-                    <h2 className="text-6xl md:text-8xl font-bold tracking-tight mb-8 leading-none">
+                    <h2 className="text-6xl md:text-8xl font-serif tracking-light mb-8 leading-none">
                         Create Beautiful<br />Gradients Instantly
                     </h2>
 
-                    <p className="text-xl md:text-2xl text-white/60 max-w-2xl mb-12 leading-relaxed">
+                    <p className="text-xl md:text-lg text-white/60 max-w-2xl mb-12 leading-relaxed">
                         Transform images into stunning mesh gradients. Extract colors, customize layouts, and export in seconds.
                     </p>
 
@@ -28,7 +29,7 @@ export default function Hero() {
                             </Button>
                         </Link>
                         <Link href="#features">
-                            <Button size="lg" variant="outline" className="border-white/20 hover:bg-white hover:text-black transition-all">
+                            <Button size="lg" variant="ghost" className="border-white/20 hover:bg-white hover:text-black transition-all">
                                 See How It Works
                             </Button>
                         </Link>
