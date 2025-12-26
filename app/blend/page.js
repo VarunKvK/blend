@@ -111,26 +111,57 @@ export default function BlendPage() {
             ctx.fillRect(0, 0, width, height);
 
             if (gradientConfig.type === 'mesh' && gradientConfig.meshPoints) {
-                const blurRadius = Math.max(width, height) * 0.1;
-                ctx.filter = `blur(${blurRadius}px) saturate(200%) contrast(120%)`;
-                ctx.globalCompositeOperation = 'screen';
+                // Create offscreen canvas for gradient circles (TRANSPARENT background)
+                const offscreen = document.createElement('canvas');
+                offscreen.width = width;
+                offscreen.height = height;
+                const offCtx = offscreen.getContext('2d');
+                if (offCtx) {
+                    // Draw circles on TRANSPARENT background (matching CSS structure)
+                    // In CSS: blur layer has transparent bg, circles inside, base color on container
+                    gradientConfig.colors.forEach((color, i) => {
+                        const pt = gradientConfig.meshPoints[i];
+                        if (!pt) return;
+                        const cx = (pt.x / 100) * width;
+                        const cy = (pt.y / 100) * height;
+                        // Match CSS: width='60%' height='60%' -> radius = 30% of dimension
+                        const rW = width * 0.3;
+                        const rH = height * 0.3;
 
-                gradientConfig.colors.forEach((color, i) => {
-                    const pt = gradientConfig.meshPoints[i];
-                    if (!pt) return;
-                    const cx = (pt.x / 100) * width;
-                    const cy = (pt.y / 100) * height;
-                    const r = Math.min(width, height) * 0.5;
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-                    ctx.fillStyle = color;
-                    ctx.globalAlpha = 0.8;
-                    ctx.fill();
-                });
+                        // Use screen blend and 0.8 opacity like CSS
+                        offCtx.globalCompositeOperation = 'screen';
+                        offCtx.globalAlpha = 0.8;
+                        offCtx.beginPath();
+                        offCtx.ellipse(cx, cy, rW, rH, 0, 0, 2 * Math.PI);
+                        offCtx.fillStyle = color;
+                        offCtx.fill();
+                    });
+                    offCtx.globalCompositeOperation = 'source-over';
+                    offCtx.globalAlpha = 1.0;
 
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.globalAlpha = 1.0;
-                ctx.filter = 'none';
+                    // Apply blur - CSS uses 100px on ~600px preview
+                    // For 1920px export: 100 * (1920/600) ≈ 320px, but that's too heavy
+                    // The visual ratio is what matters: ~16% of canvas size
+                    const blurRadius = Math.max(width, height) * 0.072;
+
+                    // Create blur canvas
+                    const blurCanvas = document.createElement('canvas');
+                    blurCanvas.width = width;
+                    blurCanvas.height = height;
+                    const blurCtx = blurCanvas.getContext('2d');
+                    if (blurCtx) {
+                        // Apply blur with saturation and contrast to the circles
+                        blurCtx.filter = `blur(${blurRadius}px) saturate(200%) contrast(120%)`;
+                        blurCtx.drawImage(offscreen, 0, 0);
+                        blurCtx.filter = 'none';
+
+                        // Composite blurred circles onto main canvas (which has base color)
+                        // Use 'screen' composite to match CSS mixBlendMode
+                        ctx.globalCompositeOperation = 'screen';
+                        ctx.drawImage(blurCanvas, 0, 0);
+                        ctx.globalCompositeOperation = 'source-over';
+                    }
+                }
             } else {
                 let grd;
                 if (gradientConfig.type === 'linear') {
