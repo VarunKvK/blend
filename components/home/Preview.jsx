@@ -1,37 +1,30 @@
 export default function Preview() {
     return (
-        <section className="relative border-b border-white/10">
-            <div className="max-w-7xl mx-auto px-6 py-20">
-                <div className="border border-white/10 rounded-sm overflow-hidden bg-black">
-                    <div className="p-1 bg-gradient-to-b from-white/5 to-transparent">
-                        <div className="bg-black p-8 md:p-12">
-                            <div className="grid md:grid-cols-5 gap-8">
-                                {/* Left Panel Preview */}
-                                <div className="md:col-span-2 space-y-6">
-                                    <div>
-                                        <div className="text-xs text-white/40 uppercase tracking-wider mb-4">Color Palette</div>
-                                        <div className="flex gap-2">
-                                            <div className="w-12 h-12 rounded-full bg-white/10 border border-white/20" />
-                                            <div className="w-12 h-12 rounded-full bg-white/20 border border-white/20" />
-                                            <div className="w-12 h-12 rounded-full bg-white/30 border border-white/20" />
-                                            <div className="w-12 h-12 rounded-full bg-white/40 border border-white/20" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs text-white/40 uppercase tracking-wider mb-4">Controls</div>
-                                        <div className="space-y-3">
-                                            <div className="h-10 bg-white/5 rounded border border-white/10" />
-                                            <div className="h-10 bg-white/5 rounded border border-white/10" />
-                                            <div className="h-10 bg-white/5 rounded border border-white/10" />
-                                        </div>
-                                    </div>
-                                </div>
+        <section className="relative border-b border-white/10 bg-black/20 backdrop-blur-sm" id="features">
+            <div className="max-w-7xl mx-auto px-6 py-24">
+                <div className="text-center mb-12">
+                    <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">See Magic in Motion</h2>
+                    <p className="text-white/50 text-lg max-w-2xl mx-auto font-light leading-relaxed">
+                        Watch how effortless it is to generate, customize, and export stunning mesh gradients. From upload to export in seconds.
+                    </p>
+                </div>
 
-                                {/* Right Panel Preview - Gradient */}
-                                <div className="md:col-span-3 aspect-video bg-gradient-to-br from-white/20 via-white/10 to-black rounded border border-white/10" />
-                            </div>
-                        </div>
+                <div className="relative max-w-8xl mx-auto">
+                    {/* Glow Effect behind video */}
+                    {/* <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 rounded-lg blur opacity-20" /> */}
+
+                    <div className="relative aspect-video w-full rounded-lg overflow-hidden border-8 backdrop-blur-xl border-white/10 bg-black shadow-2xl">
+                        <video
+                            src="/BlendIt-Demo.mp4"
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            className="w-full h-full object-cover rounded-md"
+                        />
+                        {/* Overlay Gradient for better blending */}
                     </div>
+                    <div className="absolute inset-0 ring-1 ring-inset ring-white/10 pointer-events-none rounded-md"/>
                 </div>
             </div>
         </section>

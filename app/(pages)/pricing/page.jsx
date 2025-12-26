@@ -9,7 +9,7 @@ const PLANS = [
     id: "pro",
     name: "Pro Plan",
     description: "Perfect for creators & founders",
-    price: 9,
+    price: 6,
     paymentLinkId: process.env.NEXT_PUBLIC_DODO_PRODUCT_ID,
     features: [
       "Unlimited Project Exports",

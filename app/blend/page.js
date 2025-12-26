@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Download, Code, X, CheckCircle2, ChevronDown, Crown } from 'lucide-react';
 import { extractColorsFromImage, generateCssGradient, generateSvgContent } from '@/lib/blend/colorUtils';
-import { DIMENSION_PRESETS, DEFAULT_GRADIENT_COLORS, MAX_DAILY_EXPORTS, LAYOUTS, ExportFormat } from '@/lib/blend/constants';
+import { DIMENSION_PRESETS, DEFAULT_GRADIENT_COLORS, LAYOUTS, ExportFormat } from '@/lib/blend/constants';
 import Dropzone from '@/components/blend/Dropzone';
 import PaletteDisplay from '@/components/blend/PaletteDisplay';
 import Controls from '@/components/blend/Controls';
@@ -26,68 +26,10 @@ export default function BlendPage() {
         layout: 'aurora'
     });
     const [selectedDimension, setSelectedDimension] = useState(DIMENSION_PRESETS[0]);
-    const [userTier, setUserTier] = useState({ type: 'FREE', dailyExportsLeft: MAX_DAILY_EXPORTS });
+    const [userTier, setUserTier] = useState({ type: 'FREE' });
     const [showPaywall, setShowPaywall] = useState(false);
-    const [showLoginPrompt, setShowLoginPrompt] = useState(false);
     const [notification, setNotification] = useState(null);
     const [showExportMenu, setShowExportMenu] = useState(false);
-    const [anonymousExportsUsed, setAnonymousExportsUsed] = useState(0);
-    // Load export count from localStorage on mount
-    useEffect(() => {
-        const stored = localStorage.getItem('blend_exports');
-        if (stored) {
-            try {
-                const { date, exportsLeft, tierType } = JSON.parse(stored);
-                const today = new Date().toDateString();
-
-                if (date === today) {
-                    // Same day - restore the previous count
-                    setUserTier({
-                        type: tierType || 'FREE',
-                        dailyExportsLeft: tierType === 'PAID' ? Infinity : exportsLeft
-                    });
-                }
-                // If different day, keep the default (MAX_DAILY_EXPORTS)
-            } catch (e) {
-                console.error('Error parsing stored exports:', e);
-            }
-        }
-    }, []);
-
-    // Load anonymous export count from localStorage
-    useEffect(() => {
-        const stored = localStorage.getItem('blend_anon_exports');
-        if (stored) {
-            try {
-                const { date, count } = JSON.parse(stored);
-                const today = new Date().toDateString();
-                if (date === today) {
-                    setAnonymousExportsUsed(count);
-                }
-            } catch (e) {
-                console.error('Error parsing anonymous exports:', e);
-            }
-        }
-    }, []);
-
-    // Save export count to localStorage whenever it changes
-    useEffect(() => {
-        const today = new Date().toDateString();
-        localStorage.setItem('blend_exports', JSON.stringify({
-            date: today,
-            exportsLeft: userTier.dailyExportsLeft,
-            tierType: userTier.type
-        }));
-    }, [userTier]);
-
-    // Save anonymous exports to localStorage
-    useEffect(() => {
-        const today = new Date().toDateString();
-        localStorage.setItem('blend_anon_exports', JSON.stringify({
-            date: today,
-            count: anonymousExportsUsed
-        }));
-    }, [anonymousExportsUsed]);
 
     // Check for authenticated user and their subscription status
     useEffect(() => {
@@ -169,30 +111,13 @@ export default function BlendPage() {
             return;
         }
 
-        // Anonymous users: 1 free export, then must login
-        if (!user && anonymousExportsUsed >= 1) {
-            setShowLoginPrompt(true);
-            return;
-        }
-
-        // HD/4K exports require premium (and login)
-        if (!user && (resolution === 'hd' || resolution === '4k')) {
-            setShowLoginPrompt(true);
-            return;
-        }
-
-        if (userTier.type === 'FREE' && (resolution === 'hd' || resolution === '4k')) {
+        // HD/4K exports require Pro subscription
+        if ((resolution === 'hd' || resolution === '4k') && userTier.type !== 'PAID') {
             setShowPaywall(true);
             return;
         }
 
-        // Standard PNG exports are free but limited for logged-in free users
-        if (user && userTier.type === 'FREE' && userTier.dailyExportsLeft <= 0) {
-            setShowPaywall(true);
-            return;
-        }
-
-        // Calculate dimensions based on resolution
+        // Standard exports are FREE and UNLIMITED for everyone
         let { width, height } = selectedDimension;
         if (resolution === 'hd') {
             // HD: 1920px on longest side
@@ -306,17 +231,6 @@ export default function BlendPage() {
             link.download = 'blend-background.png';
             link.href = url;
             link.click();
-        }
-
-        // Track exports
-        if (!user) {
-            // Anonymous user - increment their count
-            setAnonymousExportsUsed(prev => prev + 1);
-            showNotification("Download started!");
-        } else if (userTier.type === 'FREE') {
-            setUserTier(prev => ({ ...prev, dailyExportsLeft: prev.dailyExportsLeft - 1 }));
-            showNotification("Download started!");
-        } else {
             showNotification("Download started!");
         }
     };
@@ -432,19 +346,14 @@ export default function BlendPage() {
                         </button>
                     </div>
                     {/* Exports Status */}
-                    {!user ? (
-                        <div className="flex items-center justify-between text-[10px] text-zinc-600 px-1 uppercase tracking-widest">
-                            <span>{1 - anonymousExportsUsed} / 1 free export</span>
-                            <button onClick={() => setShowLoginPrompt(true)} className="text-white hover:underline">Login for more</button>
-                        </div>
-                    ) : userTier.type === 'FREE' ? (
-                        <div className="flex items-center justify-between text-[10px] text-zinc-600 px-1 uppercase tracking-widest">
-                            <span>{userTier.dailyExportsLeft} / {MAX_DAILY_EXPORTS} exports left</span>
-                            <button onClick={() => setShowPaywall(true)} className="text-white hover:underline">Go Pro</button>
+                    {userTier.type === 'PAID' ? (
+                        <div className="flex items-center justify-center text-[10px] text-amber-400 px-1 uppercase tracking-widest">
+                            <Crown className="w-3 h-3 mr-1" /> Pro • HD & 4K Enabled
                         </div>
                     ) : (
-                        <div className="flex items-center justify-center text-[10px] text-amber-400 px-1 uppercase tracking-widest">
-                            <Crown className="w-3 h-3 mr-1" /> Pro • Unlimited Exports
+                        <div className="flex items-center justify-between text-[10px] text-zinc-600 px-1 uppercase tracking-widest">
+                            <span>Standard exports • Unlimited</span>
+                            <button onClick={() => setShowPaywall(true)} className="text-white hover:underline">Go Pro for HD/4K</button>
                         </div>
                     )}
                 </div>
@@ -473,33 +382,6 @@ export default function BlendPage() {
                         <Link href="/pricing" className="block w-full py-3 bg-white text-black font-bold rounded-md hover:bg-zinc-200 transition-colors text-center">
                             Unlock for $9
                         </Link>
-                    </div>
-                </div>
-            )}
-            {showLoginPrompt && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-zinc-950 border border-zinc-800 rounded-lg max-w-sm w-full p-8 relative">
-                        <button onClick={() => setShowLoginPrompt(false)} className="absolute top-4 right-4 text-zinc-600 hover:text-white">
-                            <X className="w-5 h-5" />
-                        </button>
-                        <div className="text-center mb-6">
-                            <h2 className="text-xl font-bold text-white mb-2">Login to Continue</h2>
-                            <p className="text-zinc-500 text-sm">Create a free account to get 3 exports per day.</p>
-                        </div>
-                        <div className="space-y-3 mb-8">
-                            {["3 Free Exports Daily", "Save Your Projects", "Access HD Exports (Pro)", "Unlock 4K Resolution (Pro)"].map(item => (
-                                <div key={item} className="flex items-center gap-3 text-zinc-300 text-sm">
-                                    <CheckCircle2 className="w-4 h-4 text-white flex-shrink-0" />
-                                    <span>{item}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <Link href="/login" className="block w-full py-3 bg-white text-black font-bold rounded-md hover:bg-zinc-200 transition-colors text-center">
-                            Log In / Sign Up
-                        </Link>
-                        <p className="text-center text-[10px] text-zinc-600 mt-4">
-                            Free forever • No credit card required
-                        </p>
                     </div>
                 </div>
             )}

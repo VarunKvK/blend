@@ -41,6 +41,33 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --animate-aurora: aurora 60s linear infinite;
+  --animate-aurora-scroll: aurora-scroll 20s linear infinite;
+  --animate-appear: appear 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+
+  @keyframes appear {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+      filter: blur(8px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+
+  @keyframes aurora {
+    from {
+      transform: translateX(0%);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
 }
 
 :root {

@@ -31,27 +31,26 @@ export default function Navigation() {
 
                 <div className="h-4 w-px bg-white/10" />
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-8">
                     <Link href="/pricing" className="text-sm text-white/60 hover:text-white transition-colors">
                         Pricing
                     </Link>
 
-
+                    {!loading && (
+                        user ? (
+                            <UserNav email={user.email} />
+                        ) : (
+                            <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
+                                Log In
+                            </Link>
+                        )
+                    )}
                     <Link href="/blend">
                         <InteractiveHoverButton
                             text="Get Started"
                             className="bg-white text-black text-xs hover:bg-black hover:text-white border-white px-5 py-1.5"
-                            />
+                        />
                     </Link>
-                            {!loading && (
-                                user ? (
-                                    <UserNav email={user.email} />
-                                ) : (
-                                    <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
-                                        Log In
-                                    </Link>
-                                )
-                            )}
                 </div>
             </div>
         </nav>
