@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Download, Code, X, CheckCircle2 } from 'lucide-react';
+import { Download, Code, X, CheckCircle2, ChevronDown, Crown } from 'lucide-react';
 import { extractColorsFromImage, generateCssGradient, generateSvgContent } from '@/lib/blend/colorUtils';
 import { DIMENSION_PRESETS, DEFAULT_GRADIENT_COLORS, MAX_DAILY_EXPORTS, LAYOUTS, ExportFormat } from '@/lib/blend/constants';
 import Dropzone from '@/components/blend/Dropzone';
@@ -9,11 +9,14 @@ import PaletteDisplay from '@/components/blend/PaletteDisplay';
 import Controls from '@/components/blend/Controls';
 import PreviewCanvas from '@/components/blend/PreviewCanvas';
 import ShotframePromo from '@/components/blend/ShotframePromo';
+import { createClient } from '@/lib/supabase/client';
+import { UserNav } from '@/app/(pages)/dashboard/user-nav';
 import Link from 'next/link';
 
 export default function BlendPage() {
     const [image, setImage] = useState(null);
     const [isExtracting, setIsExtracting] = useState(false);
+    const [user, setUser] = useState(null);
     const [gradientConfig, setGradientConfig] = useState({
         type: 'mesh',
         angle: 135,
@@ -26,7 +29,7 @@ export default function BlendPage() {
     const [userTier, setUserTier] = useState({ type: 'FREE', dailyExportsLeft: MAX_DAILY_EXPORTS });
     const [showPaywall, setShowPaywall] = useState(false);
     const [notification, setNotification] = useState(null);
-
+    const [showExportMenu, setShowExportMenu] = useState(false);
     // Load export count from localStorage on mount
     useEffect(() => {
         const stored = localStorage.getItem('blend_exports');
@@ -58,6 +61,30 @@ export default function BlendPage() {
             tierType: userTier.type
         }));
     }, [userTier]);
+
+    // Check for authenticated user and their subscription status
+    useEffect(() => {
+        const supabase = createClient();
+        const checkUserAndSubscription = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+
+            // If user is logged in, check their Pro status from database
+            if (user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('is_pro')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profile?.is_pro) {
+                    // User is Pro - give them unlimited exports
+                    setUserTier({ type: 'PAID', dailyExportsLeft: Infinity });
+                }
+            }
+        };
+        checkUserAndSubscription();
+    }, []);
 
     useEffect(() => {
         if (image) {
@@ -106,33 +133,43 @@ export default function BlendPage() {
         });
     };
 
-    const handleExport = async (format) => {
-        if (userTier.type === 'FREE' && userTier.dailyExportsLeft <= 0) {
-            setShowPaywall(true);
-            return;
-        }
-        if (userTier.type === 'FREE' && format !== ExportFormat.PNG) {
-            setShowPaywall(true);
-            return;
-        }
-
-        const { width, height } = selectedDimension;
-
+    const handleExport = async (format, resolution = 'standard') => {
+        // CSS is always free
         if (format === ExportFormat.CSS) {
             const css = `background: ${generateCssGradient(gradientConfig)};`;
             navigator.clipboard.writeText(css);
             showNotification("CSS copied to clipboard!");
-        } else if (format === ExportFormat.SVG) {
-            const svgContent = generateSvgContent(gradientConfig, width, height);
-            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'blend-background.svg';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } else if (format === ExportFormat.PNG) {
+            return;
+        }
+
+        // HD/4K exports require premium
+        if (userTier.type === 'FREE' && (resolution === 'hd' || resolution === '4k')) {
+            setShowPaywall(true);
+            return;
+        }
+
+        // Standard PNG exports are free but limited
+        if (userTier.type === 'FREE' && userTier.dailyExportsLeft <= 0) {
+            setShowPaywall(true);
+            return;
+        }
+
+        // Calculate dimensions based on resolution
+        let { width, height } = selectedDimension;
+        if (resolution === 'hd') {
+            // HD: 1920px on longest side
+            const scale = 1920 / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+        } else if (resolution === '4k') {
+            // 4K: 3840px on longest side
+            const scale = 3840 / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+        }
+
+        // PNG export with resolution scaling
+        if (format === ExportFormat.PNG) {
             const canvas = document.createElement('canvas');
             canvas.width = width;
             canvas.height = height;
@@ -248,12 +285,21 @@ export default function BlendPage() {
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-black text-zinc-100 overflow-hidden font-sans">
             <div className="w-full md:w-[380px] flex-shrink-0 bg-black border-r border-white/10 flex flex-col h-screen z-20 shadow-2xl">
-                <div className="p-6 border-b border-white/10">
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <Link href="/">
                         <h1 className="text-lg font-bold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity">
                             BLENDIT
                         </h1>
                     </Link>
+                    {user ? (
+                        <div className="scale-75 origin-right">
+                            <UserNav email={user.email} />
+                        </div>
+                    ) : (
+                        <Link href="/login" className="text-xs font-medium text-zinc-400 hover:text-white transition-colors border border-white/10 rounded-full px-3 py-1 hover:bg-white/5">
+                            Log In
+                        </Link>
+                    )}
                 </div>
                 <div className="p-6 space-y-8 flex-1 overflow-y-auto scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                     <Dropzone onImageLoaded={setImage} currentImage={image} />
@@ -286,10 +332,55 @@ export default function BlendPage() {
                 </div>
                 <div className="p-6 border-t border-white/10 bg-black">
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                        <button onClick={() => handleExport(ExportFormat.PNG)}
-                            className="flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black py-3 rounded-md font-bold text-sm transition-all">
-                            <Download className="w-4 h-4" />Download
-                        </button>
+                        {/* Download Button with Dropdown */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowExportMenu(!showExportMenu)}
+                                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black py-3 rounded-md font-bold text-sm transition-all">
+                                <Download className="w-4 h-4" />
+                                Download
+                                <ChevronDown className={`w-3 h-3 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Export Dropdown Menu */}
+                            {showExportMenu && (
+                                <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden shadow-xl z-50">
+                                    <button
+                                        onClick={() => {
+                                            handleExport(ExportFormat.PNG, 'standard');
+                                            setShowExportMenu(false);
+                                        }}
+                                        className="w-full flex items-center justify-between px-4 py-3 text-sm text-white hover:bg-zinc-800 transition-colors">
+                                        <span>Standard</span>
+                                        <span className="text-[10px] text-zinc-500">FREE</span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleExport(ExportFormat.PNG, 'hd');
+                                            setShowExportMenu(false);
+                                        }}
+                                        className="w-full flex items-center justify-between px-4 py-3 text-sm text-white hover:bg-zinc-800 transition-colors border-t border-zinc-800">
+                                        <span>HD (1920px)</span>
+                                        <span className="flex items-center gap-1 text-[10px] text-amber-400">
+                                            <Crown className="w-3 h-3" /> PRO
+                                        </span>
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            handleExport(ExportFormat.PNG, '4k');
+                                            setShowExportMenu(false);
+                                        }}
+                                        className="w-full flex items-center justify-between px-4 py-3 text-sm text-white hover:bg-zinc-800 transition-colors border-t border-zinc-800">
+                                        <span>4K (3840px)</span>
+                                        <span className="flex items-center gap-1 text-[10px] text-amber-400">
+                                            <Crown className="w-3 h-3" /> PRO
+                                        </span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Copy CSS Button - Always Free */}
                         <button onClick={() => handleExport(ExportFormat.CSS)}
                             className="flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 text-white py-3 rounded-md font-medium text-sm transition-all border border-zinc-800">
                             <Code className="w-4 h-4" />Copy CSS
