@@ -27,6 +27,38 @@ export default function BlendPage() {
     const [showPaywall, setShowPaywall] = useState(false);
     const [notification, setNotification] = useState(null);
 
+    // Load export count from localStorage on mount
+    useEffect(() => {
+        const stored = localStorage.getItem('blend_exports');
+        if (stored) {
+            try {
+                const { date, exportsLeft, tierType } = JSON.parse(stored);
+                const today = new Date().toDateString();
+
+                if (date === today) {
+                    // Same day - restore the previous count
+                    setUserTier({
+                        type: tierType || 'FREE',
+                        dailyExportsLeft: tierType === 'PAID' ? Infinity : exportsLeft
+                    });
+                }
+                // If different day, keep the default (MAX_DAILY_EXPORTS)
+            } catch (e) {
+                console.error('Error parsing stored exports:', e);
+            }
+        }
+    }, []);
+
+    // Save export count to localStorage whenever it changes
+    useEffect(() => {
+        const today = new Date().toDateString();
+        localStorage.setItem('blend_exports', JSON.stringify({
+            date: today,
+            exportsLeft: userTier.dailyExportsLeft,
+            tierType: userTier.type
+        }));
+    }, [userTier]);
+
     useEffect(() => {
         if (image) {
             setIsExtracting(true);
@@ -142,7 +174,7 @@ export default function BlendPage() {
                     // Apply blur - CSS uses 100px on ~600px preview
                     // For 1920px export: 100 * (1920/600) ≈ 320px, but that's too heavy
                     // The visual ratio is what matters: ~16% of canvas size
-                    const blurRadius = Math.max(width, height) * 0.072;
+                    const blurRadius = Math.max(width, height) * 0.082;
 
                     // Create blur canvas
                     const blurCanvas = document.createElement('canvas');

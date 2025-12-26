@@ -15,41 +15,89 @@ const SLIDES = [
 ];
 
 export default function ShotframePromo() {
+    const [isExpanded, setIsExpanded] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
 
+    // Auto-expand after 8 seconds to grab attention (only once)
     useEffect(() => {
+        if (hasAutoExpanded) return;
+
+        const autoExpandTimer = setTimeout(() => {
+            setIsExpanded(true);
+            setHasAutoExpanded(true);
+
+            // Auto-collapse after 5 seconds
+            setTimeout(() => {
+                setIsExpanded(false);
+            }, 5000);
+        }, 5000);
+
+        return () => clearTimeout(autoExpandTimer);
+    }, [hasAutoExpanded]);
+
+    // Slideshow effect
+    useEffect(() => {
+        if (!isExpanded) return;
+
         const interval = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % SLIDES.length);
-        }, 3000); // Change slide every 3 seconds
+        }, 3000);
 
         return () => clearInterval(interval);
-    }, []);
+    }, [isExpanded]);
 
     return (
         <a
             href="https://shotframe.space"
             target="_blank"
             rel="noopener noreferrer"
-            className="block group relative overflow-hidden rounded-lg border border-white/10 bg-gradient-to-br from-white/5 to-transparent hover:border-white/30 transition-all duration-300 hover:scale-[1.02]"
+            className="block group relative overflow-hidden rounded-lg border border-white/10 bg-black/50 backdrop-blur-sm hover:border-white/20 transition-colors duration-300"
+            onMouseEnter={() => setIsExpanded(true)}
+            onMouseLeave={() => setIsExpanded(false)}
         >
-            {/* Animated gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Header - Always visible */}
+            <div className="flex items-center justify-between px-4 py-3 relative z-10">
+                <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-md bg-white flex items-center justify-center overflow-hidden flex-shrink-0">
+                        <Image
+                            src="/shotframe-slides/favicon-16x16.png"
+                            alt="Shotframe"
+                            width={14}
+                            height={14}
+                            className="object-contain"
+                        />
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-white">Try Shotframe</span>
+                        <span className="text-[9px] text-white/40 px-1.5 py-0.5 rounded bg-white/5 border border-white/10">NEW</span>
+                    </div>
+                </div>
+                <ArrowUpRight className={`w-3.5 h-3.5 text-white/40 transition-all duration-300 ${isExpanded ? 'text-white rotate-0' : 'rotate-0'}`} />
+            </div>
 
-            <div className="relative p-2">
+            {/* Expandable Content */}
+            <div
+                className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]"
+                style={{
+                    maxHeight: isExpanded ? '220px' : '0px',
+                    opacity: isExpanded ? 1 : 0,
+                }}
+            >
                 {/* Image Slideshow */}
-                <div className="relative w-full h-48 mb-3 rounded-md overflow-hidden bg-black/50">
+                <div className="relative w-full h-42 overflow-hidden bg-black/50 mx-4 rounded-md" style={{ width: 'calc(100% - 32px)' }}>
                     {SLIDES.map((slide, index) => (
                         <div
                             key={slide}
-                            className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? 'opacity-100' : 'opacity-0'
-                                }`}
+                            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+                            style={{ opacity: index === currentSlide ? 1 : 0 }}
                         >
                             <Image
                                 src={slide}
                                 alt={`Shotframe example ${index + 1}`}
                                 fill
-                                className="object-cover"
-                                sizes="(max-width: 380px) 100vw, 380px"
+                                className="object-cover rounded-md"
+                                sizes="340px"
                             />
                         </div>
                     ))}
@@ -59,51 +107,29 @@ export default function ShotframePromo() {
                         {SLIDES.map((_, index) => (
                             <div
                                 key={index}
-                                className={`h-1 rounded-full transition-all duration-300 ${index === currentSlide
-                                    ? 'w-4 bg-white'
-                                    : 'w-1 bg-white/30'
-                                    }`}
+                                className="h-1 rounded-full transition-all duration-500 ease-out"
+                                style={{
+                                    width: index === currentSlide ? '12px' : '4px',
+                                    backgroundColor: index === currentSlide ? 'white' : 'rgba(255,255,255,0.3)'
+                                }}
                             />
                         ))}
                     </div>
                 </div>
 
-                <div className="p-2">
-                    <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-md flex items-center justify-center border border-white/20 overflow-hidden bg-black/10">
-                                <Image
-                                    src="/shotframe-slides/favicon-16x16.png"
-                                    alt="Shotframe"
-                                    width={20}
-                                    height={20}
-                                    className="object-contain"
-                                />
-                            </div>
-                            <div>
-                                <div className="text-xs font-semibold text-white">Shotframe</div>
-                                <div className="text-[9px] text-white/40 uppercase tracking-wider">New Product</div>
-                            </div>
-                        </div>
-                        <ArrowUpRight className="w-3.5 h-3.5 text-white/40 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
-                    </div>
-
-                    <p className="text-xs text-white/60 leading-relaxed mb-3">
-                        Create stunning browser mockups and device frames for your designs instantly.
+                {/* Description */}
+                <div className="px-4 py-3">
+                    <p className="text-[11px] text-white/50 leading-relaxed mb-2">
+                        Create stunning browser mockups and device frames instantly.
                     </p>
 
                     <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-medium text-white/80 px-2 py-1 rounded bg-white/10 border border-white/20">
+                        <span className="text-[9px] font-medium text-white/70 px-2 py-1 rounded bg-white/10 border border-white/10">
                             Free to Use
                         </span>
-                        <span className="text-[10px] text-white/40">→ Try Now</span>
+                        <span className="text-[9px] text-white/30 group-hover:text-white/50 transition-colors">→ Try Now</span>
                     </div>
                 </div>
-            </div>
-
-            {/* Shine effect on hover */}
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             </div>
         </a>
     );
