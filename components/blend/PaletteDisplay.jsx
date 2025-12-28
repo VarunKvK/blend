@@ -31,7 +31,7 @@ const PaletteDisplay = ({ colors, onColorsChange }) => {
                         </div>
                         {colors.length > 2 && (
                             <button onClick={(e) => { e.stopPropagation(); if (colors.length > 2) onColorsChange(colors.filter((_, i) => i !== index)); }}
-                                className="absolute -top-1 -right-1 bg-black text-zinc-500 hover:text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity border border-zinc-700 shadow-sm z-10">
+                                className="absolute -top-1 -right-1 bg-black text-zinc-500 hover:text-white rounded-full p-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity border border-zinc-700 shadow-sm z-10">
                                 <X className="w-2.5 h-2.5" />
                             </button>
                         )}

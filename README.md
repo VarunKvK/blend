@@ -71,6 +71,8 @@ const config = {
 
 ### 3. Database Setup (Supabase)
 
+CHANGE THE URL CONFIGURATION FROM "localhost" to your domain name.
+
 Go to your Supabase project's **SQL Editor** and run the following scripts to set up the necessary tables and triggers.
 
 **Step 1: Create Profiles Table**

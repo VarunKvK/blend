@@ -53,7 +53,7 @@ export default function Hero() {
 
                 {/* Main Content Section */}
                 <div className="w-full py-20 text-center px-6 backdrop-blur-[2px]">
-                    <h2 className="text-6xl md:text-8xl font-serif tracking-tight mb-8 text-white leading-[0.9]">
+                    <h2 className="text-5xl md:text-8xl font-serif tracking-tight mb-8 text-white leading-[0.9]">
                         Create Beautiful<br />
                         <span className="italic font-light">Gradients Instantly</span>
                     </h2>

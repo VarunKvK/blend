@@ -25,7 +25,7 @@ const PreviewCanvas = ({ gradient, aspectRatio, onUpdateMeshPoints }) => {
     };
   }, [draggingIndex, onUpdateMeshPoints]);
   return (
-    <div className="w-full h-full flex items-center justify-center p-8 bg-black relative overflow-hidden select-none">
+    <div className="w-full h-full flex items-center justify-center p-2 md:p-8 bg-black relative overflow-hidden select-none">
       <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       <div ref={containerRef} className="relative shadow-2xl shadow-black/50 overflow-hidden rounded-3xl"
         style={{ aspectRatio, width: aspectRatio >= 1 ? '100%' : 'auto', height: aspectRatio < 1 ? '100%' : 'auto', maxHeight: '100%', maxWidth: '100%', background: gradient.type === 'mesh' ? gradient.colors[0] : standardCssBackground }}>
