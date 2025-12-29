@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Download, Code, X, CheckCircle2, ChevronDown, Crown } from 'lucide-react';
+import { Download, Code, X, CheckCircle2, ChevronDown, Crown, ExternalLink } from 'lucide-react';
 import { extractColorsFromImage, generateCssGradient, generateSvgContent } from '@/lib/blend/colorUtils';
 import { DIMENSION_PRESETS, DEFAULT_GRADIENT_COLORS, LAYOUTS, ExportFormat } from '@/lib/blend/constants';
 import Dropzone from '@/components/blend/Dropzone';
@@ -102,6 +102,116 @@ export default function BlendPage() {
         });
     };
 
+    const generateCanvas = (width, height) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+
+        ctx.fillStyle = gradientConfig.colors[0];
+        ctx.fillRect(0, 0, width, height);
+
+        if (gradientConfig.type === 'mesh' && gradientConfig.meshPoints) {
+            // Create offscreen canvas for gradient circles (TRANSPARENT background)
+            const offscreen = document.createElement('canvas');
+            offscreen.width = width;
+            offscreen.height = height;
+            const offCtx = offscreen.getContext('2d');
+            if (offCtx) {
+                // Draw circles on TRANSPARENT background (matching CSS structure)
+                gradientConfig.colors.forEach((color, i) => {
+                    const pt = gradientConfig.meshPoints[i];
+                    if (!pt) return;
+                    const cx = (pt.x / 100) * width;
+                    const cy = (pt.y / 100) * height;
+                    const rW = width * 0.3;
+                    const rH = height * 0.3;
+
+                    offCtx.globalCompositeOperation = 'screen';
+                    offCtx.globalAlpha = 0.8;
+                    offCtx.beginPath();
+                    offCtx.ellipse(cx, cy, rW, rH, 0, 0, 2 * Math.PI);
+                    offCtx.fillStyle = color;
+                    offCtx.fill();
+                });
+                offCtx.globalCompositeOperation = 'source-over';
+                offCtx.globalAlpha = 1.0;
+
+                const blurRadius = Math.max(width, height) * 0.082;
+                const blurCanvas = document.createElement('canvas');
+                blurCanvas.width = width;
+                blurCanvas.height = height;
+                const blurCtx = blurCanvas.getContext('2d');
+                if (blurCtx) {
+                    blurCtx.filter = `blur(${blurRadius}px) saturate(200%) contrast(120%)`;
+                    blurCtx.drawImage(offscreen, 0, 0);
+                    blurCtx.filter = 'none';
+
+                    ctx.globalCompositeOperation = 'screen';
+                    ctx.drawImage(blurCanvas, 0, 0);
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+            }
+        } else {
+            let grd;
+            if (gradientConfig.type === 'linear') {
+                const rad = (gradientConfig.angle * Math.PI) / 180;
+                const x1 = width / 2 - Math.cos(rad) * width / 2;
+                const y1 = height / 2 - Math.sin(rad) * height / 2;
+                const x2 = width / 2 + Math.cos(rad) * width / 2;
+                const y2 = height / 2 + Math.sin(rad) * height / 2;
+                grd = ctx.createLinearGradient(x1, y1, x2, y2);
+            } else {
+                grd = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
+            }
+            gradientConfig.colors.forEach((color, i) => {
+                grd.addColorStop(i / (gradientConfig.colors.length - 1), color);
+            });
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, width, height);
+        }
+
+        if (gradientConfig.noise > 0) {
+            const imageData = ctx.getImageData(0, 0, width, height);
+            const data = imageData.data;
+            const noiseIntensity = gradientConfig.noise * 255 * 0.6;
+            for (let i = 0; i < data.length; i += 4) {
+                const grain = (Math.random() - 0.5) * noiseIntensity;
+                data[i] = Math.min(255, Math.max(0, data[i] + grain));
+                data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + grain));
+                data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + grain));
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+
+        return canvas;
+    };
+
+    const handleEditInShotframe = async () => {
+        const { width, height } = selectedDimension;
+        const canvas = generateCanvas(width, height);
+        if (!canvas) return;
+
+        canvas.toBlob(async (blob) => {
+            if (!blob) return;
+            try {
+                const item = new ClipboardItem({ 'image/png': blob });
+                await navigator.clipboard.write([item]);
+
+                showNotification("Image copied! Paste it in Shotframe (Ctrl+V)");
+
+                setTimeout(() => {
+                    window.open('https://shotframe.space', '_blank');
+                }, 500);
+            } catch (err) {
+                console.error('Clipboard write failed:', err);
+                showNotification("Couldn't copy image. Opening Shotframe anyway...", "error");
+                window.open('https://shotframe.space', '_blank');
+            }
+        });
+    };
+
     const handleExport = async (format, resolution = 'standard') => {
         // CSS is always free
         if (format === ExportFormat.CSS) {
@@ -133,98 +243,8 @@ export default function BlendPage() {
 
         // PNG export with resolution scaling
         if (format === ExportFormat.PNG) {
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            ctx.fillStyle = gradientConfig.colors[0];
-            ctx.fillRect(0, 0, width, height);
-
-            if (gradientConfig.type === 'mesh' && gradientConfig.meshPoints) {
-                // Create offscreen canvas for gradient circles (TRANSPARENT background)
-                const offscreen = document.createElement('canvas');
-                offscreen.width = width;
-                offscreen.height = height;
-                const offCtx = offscreen.getContext('2d');
-                if (offCtx) {
-                    // Draw circles on TRANSPARENT background (matching CSS structure)
-                    // In CSS: blur layer has transparent bg, circles inside, base color on container
-                    gradientConfig.colors.forEach((color, i) => {
-                        const pt = gradientConfig.meshPoints[i];
-                        if (!pt) return;
-                        const cx = (pt.x / 100) * width;
-                        const cy = (pt.y / 100) * height;
-                        // Match CSS: width='60%' height='60%' -> radius = 30% of dimension
-                        const rW = width * 0.3;
-                        const rH = height * 0.3;
-
-                        // Use screen blend and 0.8 opacity like CSS
-                        offCtx.globalCompositeOperation = 'screen';
-                        offCtx.globalAlpha = 0.8;
-                        offCtx.beginPath();
-                        offCtx.ellipse(cx, cy, rW, rH, 0, 0, 2 * Math.PI);
-                        offCtx.fillStyle = color;
-                        offCtx.fill();
-                    });
-                    offCtx.globalCompositeOperation = 'source-over';
-                    offCtx.globalAlpha = 1.0;
-
-                    // Apply blur - CSS uses 100px on ~600px preview
-                    // For 1920px export: 100 * (1920/600) ≈ 320px, but that's too heavy
-                    // The visual ratio is what matters: ~16% of canvas size
-                    const blurRadius = Math.max(width, height) * 0.082;
-
-                    // Create blur canvas
-                    const blurCanvas = document.createElement('canvas');
-                    blurCanvas.width = width;
-                    blurCanvas.height = height;
-                    const blurCtx = blurCanvas.getContext('2d');
-                    if (blurCtx) {
-                        // Apply blur with saturation and contrast to the circles
-                        blurCtx.filter = `blur(${blurRadius}px) saturate(200%) contrast(120%)`;
-                        blurCtx.drawImage(offscreen, 0, 0);
-                        blurCtx.filter = 'none';
-
-                        // Composite blurred circles onto main canvas (which has base color)
-                        // Use 'screen' composite to match CSS mixBlendMode
-                        ctx.globalCompositeOperation = 'screen';
-                        ctx.drawImage(blurCanvas, 0, 0);
-                        ctx.globalCompositeOperation = 'source-over';
-                    }
-                }
-            } else {
-                let grd;
-                if (gradientConfig.type === 'linear') {
-                    const rad = (gradientConfig.angle * Math.PI) / 180;
-                    const x1 = width / 2 - Math.cos(rad) * width / 2;
-                    const y1 = height / 2 - Math.sin(rad) * height / 2;
-                    const x2 = width / 2 + Math.cos(rad) * width / 2;
-                    const y2 = height / 2 + Math.sin(rad) * height / 2;
-                    grd = ctx.createLinearGradient(x1, y1, x2, y2);
-                } else {
-                    grd = ctx.createRadialGradient(width / 2, height / 2, 0, width / 2, height / 2, width / 2);
-                }
-                gradientConfig.colors.forEach((color, i) => {
-                    grd.addColorStop(i / (gradientConfig.colors.length - 1), color);
-                });
-                ctx.fillStyle = grd;
-                ctx.fillRect(0, 0, width, height);
-            }
-
-            if (gradientConfig.noise > 0) {
-                const imageData = ctx.getImageData(0, 0, width, height);
-                const data = imageData.data;
-                const noiseIntensity = gradientConfig.noise * 255 * 0.6;
-                for (let i = 0; i < data.length; i += 4) {
-                    const grain = (Math.random() - 0.5) * noiseIntensity;
-                    data[i] = Math.min(255, Math.max(0, data[i] + grain));
-                    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + grain));
-                    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + grain));
-                }
-                ctx.putImageData(imageData, 0, 0);
-            }
+            const canvas = generateCanvas(width, height);
+            if (!canvas) return;
 
             const url = canvas.toDataURL('image/png');
             const link = document.createElement('a');
@@ -292,6 +312,13 @@ export default function BlendPage() {
                     </div>
                 </div>
                 <div className="p-4 md:p-6 border-t border-white/10 bg-black">
+                    <button onClick={handleEditInShotframe}
+                        className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-zinc-800 to-zinc-900 hover:from-zinc-700 hover:to-zinc-800 text-white py-3 rounded-md font-medium text-sm transition-all border border-zinc-700 mb-3 group relative overflow-hidden">
+                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="bg-amber-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded leading-none">NEW</span>
+                        <span>Edit in Shotframe</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors" />
+                    </button>
                     <div className="grid grid-cols-2 gap-3 mb-4">
                         {/* Download Button with Dropdown */}
                         <div className="relative">
