@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import Image from 'next/image';
+import { analytics } from '@/lib/analytics';
 
 const SLIDES = [
     '/shotframe-slides/shotframe-1766432406508.png',
@@ -55,6 +56,7 @@ export default function ShotframePromo() {
             className="block group relative overflow-hidden rounded-lg border border-white/10 bg-black/50 backdrop-blur-sm hover:border-white/20 transition-colors duration-300"
             onMouseEnter={() => setIsExpanded(true)}
             onMouseLeave={() => setIsExpanded(false)}
+            onClick={() => analytics.promoClicked()}
         >
             {/* Header - Always visible */}
             <div className="flex items-center justify-between px-4 py-3 relative z-10">

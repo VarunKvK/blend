@@ -12,6 +12,7 @@ import ShotframePromo from '@/components/blend/ShotframePromo';
 import { createClient } from '@/lib/supabase/client';
 import { UserNav } from '@/app/(pages)/dashboard/user-nav';
 import Link from 'next/link';
+import { analytics } from '@/lib/analytics';
 
 export default function BlendPage() {
     const [image, setImage] = useState(null);
@@ -189,6 +190,9 @@ export default function BlendPage() {
     };
 
     const handleEditInShotframe = async () => {
+        // Track the initial button click
+        analytics.clickSendToShotframe(true);
+
         const { width, height } = selectedDimension;
         const canvas = generateCanvas(width, height);
         if (!canvas) return;
@@ -199,15 +203,22 @@ export default function BlendPage() {
                 const item = new ClipboardItem({ 'image/png': blob });
                 await navigator.clipboard.write([item]);
 
+                // Track successful clipboard copy
+                analytics.gradientCopied();
+
                 showNotification("Image copied! Paste it in Shotframe (Ctrl+V)");
 
                 setTimeout(() => {
                     window.open('https://shotframe.space', '_blank');
+                    // Track when Shotframe is opened
+                    analytics.shotframeOpened();
                 }, 500);
             } catch (err) {
                 console.error('Clipboard write failed:', err);
+                // Track failed attempt (still track as click but with fail note in console)
                 showNotification("Couldn't copy image. Opening Shotframe anyway...", "error");
                 window.open('https://shotframe.space', '_blank');
+                analytics.shotframeOpened();
             }
         });
     };
