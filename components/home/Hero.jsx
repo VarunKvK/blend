@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { InteractiveHoverButton } from "@/components/ui/interactive-hover-button";
+import QuickDemoModal from "@/components/home/QuickDemoModal";
 
 export default function Hero() {
     return (
@@ -67,17 +68,13 @@ export default function Hero() {
                 <div className="w-full border-t border-dashed border-white/10 py-10 flex flex-col sm:flex-row items-center justify-center gap-6 backdrop-blur-[2px]">
                     <Link href="/blend">
                         <InteractiveHoverButton
-                            text="Start Creating"
+                            text="Start Creating Free"
                             className="bg-white text-black hover:bg-zinc-200 border-white"
                         />
                     </Link>
-                    <Link href="#features">
-                        <span className="text-sm font-medium text-white/60 hover:text-white transition-colors cursor-pointer border-b border-transparent hover:border-white/60 pb-0.5">
-                            See How It Works
-                        </span>
-                    </Link>
                 </div>
             </div>
+
 
             {/* Decorative corners for the grid */}
             <div className="absolute top-[15%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-white/20 rotate-45" />

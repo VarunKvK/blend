@@ -9,6 +9,7 @@ export default function CTA() {
                 <h3 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
                     Start Creating<br />Beautiful Gradients
                 </h3>
+                
                 <p className="text-xl text-white/60 mb-12 max-w-2xl mx-auto">
                     Join designers and developers using Blend to create stunning visuals
                 </p>

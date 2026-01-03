@@ -3,7 +3,9 @@ export default function Preview() {
         <section className="relative border-b border-white/10 bg-black/20 backdrop-blur-sm" id="features">
             <div className="max-w-7xl mx-auto px-6 py-24">
                 <div className="text-center mb-12">
-                    <h2 className="text-4xl md:text-5xl font-serif text-white mb-6">See Magic in Motion</h2>
+                    <h3 className="text-4xl md:text-5xl font-serif text-white mb-4">
+                        See Magic in<span className="italic font-light"> Motion</span>
+                    </h3>
                     <p className="text-white/50 text-lg max-w-2xl mx-auto font-light leading-relaxed">
                         Watch how effortless it is to generate, customize, and export stunning mesh gradients. From upload to export in seconds.
                     </p>

@@ -39,7 +39,9 @@ export default function Features() {
         <section id="features" className="relative py-32 border-b border-white/10">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="mb-20">
-                    <h3 className="text-4xl md:text-5xl font-bold mb-4">Everything You Need</h3>
+                    <h3 className="text-4xl md:text-5xl font-serif text-white mb-4">
+                        Everything You <span className="italic font-light"> Need</span>
+                    </h3>
                     <p className="text-white/60 text-lg max-w-2xl">
                         Professional gradient creation tools with an intuitive interface
                     </p>
