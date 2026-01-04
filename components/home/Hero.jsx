@@ -60,7 +60,7 @@ export default function Hero() {
                     </h2>
 
                     <p className="text-lg md:text-xl text-white/50 max-w-lg mx-auto leading-relaxed mb-0 font-light">
-                        Transform images into stunning mesh gradients. Extract colors, customize layouts, and export in seconds.
+                        Stop guessing hex codes. Extract brand-perfect gradients from any screenshot. 10 seconds, browser-based, no Figma.
                     </p>
                 </div>
 

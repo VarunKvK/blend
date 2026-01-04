@@ -21,7 +21,7 @@ export default function Home() {
       <Features />
       <Stats />
       <CTA />
-      <Footer />
+      <Footer /> 
       <ExitIntentModal />
       <FloatingCTA />
     </main>
