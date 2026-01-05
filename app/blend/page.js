@@ -1,14 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Download, Code, X, CheckCircle2, ChevronDown, Crown, ExternalLink } from 'lucide-react';
+import { Download, Code, X, CheckCircle2, ChevronDown, Crown, ExternalLink, Share2 } from 'lucide-react';
 import { extractColorsFromImage, generateCssGradient, generateSvgContent } from '@/lib/blend/colorUtils';
 import { DIMENSION_PRESETS, DEFAULT_GRADIENT_COLORS, LAYOUTS, ExportFormat } from '@/lib/blend/constants';
+import { getGradientFromUrl } from '@/lib/blend/shareUtils';
 import Dropzone from '@/components/blend/Dropzone';
 import PaletteDisplay from '@/components/blend/PaletteDisplay';
 import Controls from '@/components/blend/Controls';
 import PreviewCanvas from '@/components/blend/PreviewCanvas';
 import ShotframePromo from '@/components/blend/ShotframePromo';
+import PresetGallery from '@/components/blend/PresetGallery';
+import ShareModal from '@/components/blend/ShareModal';
 import { createClient } from '@/lib/supabase/client';
 import { UserNav } from '@/app/(pages)/dashboard/user-nav';
 import Link from 'next/link';
@@ -31,6 +34,7 @@ export default function BlendPage() {
     const [showPaywall, setShowPaywall] = useState(false);
     const [notification, setNotification] = useState(null);
     const [showExportMenu, setShowExportMenu] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
 
     // Check for authenticated user and their subscription status
     useEffect(() => {
@@ -54,6 +58,13 @@ export default function BlendPage() {
             }
         };
         checkUserAndSubscription();
+
+        // Check for shared gradient in URL
+        const sharedGradient = getGradientFromUrl();
+        if (sharedGradient) {
+            setGradientConfig(sharedGradient);
+            showNotification('Shared gradient loaded! 🎨');
+        }
     }, []);
 
     useEffect(() => {
@@ -101,6 +112,11 @@ export default function BlendPage() {
             }
             return { ...prev, meshPoints: newPoints };
         });
+    };
+
+    const handleApplyPreset = (presetConfig) => {
+        setGradientConfig(presetConfig);
+        showNotification(`Preset applied!`);
     };
 
     const generateCanvas = (width, height) => {
@@ -293,6 +309,10 @@ export default function BlendPage() {
                 </div>
                 <div className="p-4 md:p-6 space-y-6 md:space-y-8 flex-1 overflow-y-auto scrollbar-hide" style={{ msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                     <Dropzone onImageLoaded={setImage} currentImage={image} />
+
+                    {/* Gradient Presets Library */}
+                    <PresetGallery onApplyPreset={handleApplyPreset} />
+
                     {isExtracting ? (
                         <div className="text-center py-8 text-zinc-400 text-sm animate-pulse">Analyzing Colors...</div>
                     ) : (
@@ -301,6 +321,7 @@ export default function BlendPage() {
                             <Controls config={gradientConfig} onChange={setGradientConfig} onShuffle={handleShuffle} />
                         </>
                     )}
+
 
                     {/* Shotframe Promo */}
                     <div className="hidden md:block">
@@ -330,20 +351,20 @@ export default function BlendPage() {
                         <span>Edit in Shotframe</span>
                         <ExternalLink className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors" />
                     </button>
-                    <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="grid grid-cols-3 gap-2 mb-4">
                         {/* Download Button with Dropdown */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowExportMenu(!showExportMenu)}
-                                className="w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-200 text-black py-3 rounded-md font-bold text-sm transition-all">
+                                className="w-full flex items-center justify-center gap-1.5 bg-white hover:bg-zinc-200 text-black py-3 rounded-md font-bold text-sm transition-all"
+                                title="Download Gradient">
                                 <Download className="w-4 h-4" />
-                                Download
-                                <ChevronDown className={`w-3 h-3 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+                                <ChevronDown className={`w-4 h-4 transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
                             </button>
 
                             {/* Export Dropdown Menu */}
                             {showExportMenu && (
-                                <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden shadow-xl z-50">
+                                <div className="absolute bottom-full left-0 right-0 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg overflow-hidden shadow-xl z-[60]">
                                     <button
                                         onClick={() => {
                                             handleExport(ExportFormat.PNG, 'standard');
@@ -381,8 +402,16 @@ export default function BlendPage() {
 
                         {/* Copy CSS Button - Always Free */}
                         <button onClick={() => handleExport(ExportFormat.CSS)}
-                            className="flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 text-white py-3 rounded-md font-medium text-sm transition-all border border-zinc-800">
-                            <Code className="w-4 h-4" />Copy CSS
+                            className="flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 text-white py-3 rounded-md font-medium text-sm transition-all border border-zinc-800"
+                            title="Copy CSS">
+                            <Code className="w-4 h-4" />
+                        </button>
+
+                        {/* Share Button */}
+                        <button onClick={() => setShowShareModal(true)}
+                            className="flex items-center justify-center gap-2 bg-black hover:bg-zinc-900 text-white py-3 rounded-md font-medium text-sm transition-all border border-zinc-800"
+                            title="Share Gradient">
+                            <Share2 className="w-4 h-4" />
                         </button>
                     </div>
                     {/* Exports Status */}
@@ -432,6 +461,13 @@ export default function BlendPage() {
                     </div>
                 </div>
             )}
+
+            {/* Share Modal */}
+            <ShareModal
+                isOpen={showShareModal}
+                onClose={() => setShowShareModal(false)}
+                gradientConfig={gradientConfig}
+            />
         </div>
     );
 }
