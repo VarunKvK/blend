@@ -123,20 +123,24 @@ export default function BlendPage() {
         const canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', {
+            colorSpace: 'srgb',
+            willReadFrequently: false
+        });
         if (!ctx) return null;
 
+        // Fill with base color
         ctx.fillStyle = gradientConfig.colors[0];
         ctx.fillRect(0, 0, width, height);
 
         if (gradientConfig.type === 'mesh' && gradientConfig.meshPoints) {
-            // Create offscreen canvas for gradient circles (TRANSPARENT background)
+            // Create offscreen canvas for gradient circles
             const offscreen = document.createElement('canvas');
             offscreen.width = width;
             offscreen.height = height;
-            const offCtx = offscreen.getContext('2d');
+            const offCtx = offscreen.getContext('2d', { colorSpace: 'srgb' });
             if (offCtx) {
-                // Draw circles on TRANSPARENT background (matching CSS structure)
+                // Draw circles with screen blend mode
                 gradientConfig.colors.forEach((color, i) => {
                     const pt = gradientConfig.meshPoints[i];
                     if (!pt) return;
@@ -155,22 +159,26 @@ export default function BlendPage() {
                 offCtx.globalCompositeOperation = 'source-over';
                 offCtx.globalAlpha = 1.0;
 
+                // Apply blur with enhanced saturation and contrast to match CSS preview
                 const blurRadius = Math.max(width, height) * 0.082;
                 const blurCanvas = document.createElement('canvas');
                 blurCanvas.width = width;
                 blurCanvas.height = height;
-                const blurCtx = blurCanvas.getContext('2d');
+                const blurCtx = blurCanvas.getContext('2d', { colorSpace: 'srgb' });
                 if (blurCtx) {
-                    blurCtx.filter = `blur(${blurRadius}px) saturate(200%) contrast(120%)`;
+                    // CRITICAL FIX: Match the CSS preview exactly with stronger saturation/contrast
+                    blurCtx.filter = `blur(${blurRadius}px) saturate(250%) contrast(140%)`;
                     blurCtx.drawImage(offscreen, 0, 0);
                     blurCtx.filter = 'none';
 
+                    // Composite onto main canvas with screen blend mode
                     ctx.globalCompositeOperation = 'screen';
                     ctx.drawImage(blurCanvas, 0, 0);
                     ctx.globalCompositeOperation = 'source-over';
                 }
             }
         } else {
+            // Linear or Radial gradients
             let grd;
             if (gradientConfig.type === 'linear') {
                 const rad = (gradientConfig.angle * Math.PI) / 180;
@@ -189,6 +197,7 @@ export default function BlendPage() {
             ctx.fillRect(0, 0, width, height);
         }
 
+        // Apply noise/grain if enabled
         if (gradientConfig.noise > 0) {
             const imageData = ctx.getImageData(0, 0, width, height);
             const data = imageData.data;
@@ -201,6 +210,65 @@ export default function BlendPage() {
             }
             ctx.putImageData(imageData, 0, 0);
         }
+
+        // CRITICAL FIX: Apply final color enhancement to match preview vibrancy
+        const finalImageData = ctx.getImageData(0, 0, width, height);
+        const finalData = finalImageData.data;
+
+        // Boost saturation and contrast at pixel level for exact color matching
+        for (let i = 0; i < finalData.length; i += 4) {
+            const r = finalData[i];
+            const g = finalData[i + 1];
+            const b = finalData[i + 2];
+
+            // Convert to HSL for saturation boost
+            const max = Math.max(r, g, b) / 255;
+            const min = Math.min(r, g, b) / 255;
+            const l = (max + min) / 2;
+
+            if (max !== min) {
+                const d = max - min;
+                const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+                // Boost saturation by 1.5x to match preview
+                const newS = Math.min(1, s * 1.5);
+
+                // Reconstruct RGB with boosted saturation
+                const q = l < 0.5 ? l * (1 + newS) : l + newS - l * newS;
+                const p = 2 * l - q;
+
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1 / 6) return p + (q - p) * 6 * t;
+                    if (t < 1 / 2) return q;
+                    if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                    return p;
+                };
+
+                let h = 0;
+                if (max === r / 255) {
+                    h = ((g - b) / 255) / d + (g < b ? 6 : 0);
+                } else if (max === g / 255) {
+                    h = ((b - r) / 255) / d + 2;
+                } else {
+                    h = ((r - g) / 255) / d + 4;
+                }
+                h /= 6;
+
+                finalData[i] = Math.round(hue2rgb(p, q, h + 1 / 3) * 255);
+                finalData[i + 1] = Math.round(hue2rgb(p, q, h) * 255);
+                finalData[i + 2] = Math.round(hue2rgb(p, q, h - 1 / 3) * 255);
+            }
+
+            // Apply contrast boost (1.2x)
+            const contrast = 1.2;
+            finalData[i] = Math.min(255, Math.max(0, ((finalData[i] / 255 - 0.5) * contrast + 0.5) * 255));
+            finalData[i + 1] = Math.min(255, Math.max(0, ((finalData[i + 1] / 255 - 0.5) * contrast + 0.5) * 255));
+            finalData[i + 2] = Math.min(255, Math.max(0, ((finalData[i + 2] / 255 - 0.5) * contrast + 0.5) * 255));
+        }
+
+        ctx.putImageData(finalImageData, 0, 0);
 
         return canvas;
     };
