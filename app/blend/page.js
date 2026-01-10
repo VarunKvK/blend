@@ -149,7 +149,7 @@ export default function BlendPage() {
                     const rW = width * 0.3;
                     const rH = height * 0.3;
 
-                    offCtx.globalCompositeOperation = 'screen';
+                    offCtx.globalCompositeOperation = 'plus-lighter';
                     offCtx.globalAlpha = 0.8;
                     offCtx.beginPath();
                     offCtx.ellipse(cx, cy, rW, rH, 0, 0, 2 * Math.PI);
@@ -159,20 +159,20 @@ export default function BlendPage() {
                 offCtx.globalCompositeOperation = 'source-over';
                 offCtx.globalAlpha = 1.0;
 
-                // Apply blur with enhanced saturation and contrast to match CSS preview
+                // Apply blur with MAXIMUM saturation and contrast for vibrant exports
                 const blurRadius = Math.max(width, height) * 0.082;
                 const blurCanvas = document.createElement('canvas');
                 blurCanvas.width = width;
                 blurCanvas.height = height;
                 const blurCtx = blurCanvas.getContext('2d', { colorSpace: 'srgb' });
                 if (blurCtx) {
-                    // CRITICAL FIX: Match the CSS preview exactly with stronger saturation/contrast
-                    blurCtx.filter = `blur(${blurRadius}px) saturate(250%) contrast(140%)`;
+                    // Match and slightly enhance preview vibrancy
+                    blurCtx.filter = `blur(${blurRadius}px) saturate(100%) contrast(100%) brightness(100%)`;
                     blurCtx.drawImage(offscreen, 0, 0);
                     blurCtx.filter = 'none';
 
                     // Composite onto main canvas with screen blend mode
-                    ctx.globalCompositeOperation = 'screen';
+                    ctx.globalCompositeOperation = 'plus-lighter';
                     ctx.drawImage(blurCanvas, 0, 0);
                     ctx.globalCompositeOperation = 'source-over';
                 }
@@ -211,11 +211,11 @@ export default function BlendPage() {
             ctx.putImageData(imageData, 0, 0);
         }
 
-        // CRITICAL FIX: Apply final color enhancement to match preview vibrancy
+        // MAXIMUM COLOR ENHANCEMENT: Apply aggressive saturation, contrast, and brightness boost
         const finalImageData = ctx.getImageData(0, 0, width, height);
         const finalData = finalImageData.data;
 
-        // Boost saturation and contrast at pixel level for exact color matching
+        // Extreme saturation and contrast boost at pixel level for vibrant, glowing colors
         for (let i = 0; i < finalData.length; i += 4) {
             const r = finalData[i];
             const g = finalData[i + 1];
@@ -230,10 +230,10 @@ export default function BlendPage() {
                 const d = max - min;
                 const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
 
-                // Boost saturation by 1.5x to match preview
+                // EXTREME BOOST: 2.2x saturation for rich, vibrant colors
                 const newS = Math.min(1, s * 1.5);
 
-                // Reconstruct RGB with boosted saturation
+                // Reconstruct RGB with massively boosted saturation
                 const q = l < 0.5 ? l * (1 + newS) : l + newS - l * newS;
                 const p = 2 * l - q;
 
@@ -261,11 +261,17 @@ export default function BlendPage() {
                 finalData[i + 2] = Math.round(hue2rgb(p, q, h - 1 / 3) * 255);
             }
 
-            // Apply contrast boost (1.2x)
-            const contrast = 1.2;
+            // HEAVY CONTRAST BOOST: 1.5x for dramatic color definition
+            const contrast = 1.5;
             finalData[i] = Math.min(255, Math.max(0, ((finalData[i] / 255 - 0.5) * contrast + 0.5) * 255));
             finalData[i + 1] = Math.min(255, Math.max(0, ((finalData[i + 1] / 255 - 0.5) * contrast + 0.5) * 255));
             finalData[i + 2] = Math.min(255, Math.max(0, ((finalData[i + 2] / 255 - 0.5) * contrast + 0.5) * 255));
+
+            // BRIGHTNESS/GLOW BOOST: Add 8% brightness for glowing effect
+            const brightnessBoost = 1.08;
+            finalData[i] = Math.min(255, finalData[i] * brightnessBoost);
+            finalData[i + 1] = Math.min(255, finalData[i + 1] * brightnessBoost);
+            finalData[i + 2] = Math.min(255, finalData[i + 2] * brightnessBoost);
         }
 
         ctx.putImageData(finalImageData, 0, 0);
